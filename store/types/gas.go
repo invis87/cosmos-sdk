@@ -36,6 +36,7 @@ type GasMeter interface {
 	ConsumeGas(amount Gas, descriptor string)
 	IsPastLimit() bool
 	IsOutOfGas() bool
+	UpdateGasValue(newValue Gas)
 }
 
 type basicGasMeter struct {
@@ -49,6 +50,10 @@ func NewGasMeter(limit Gas) GasMeter {
 		limit:    limit,
 		consumed: 0,
 	}
+}
+
+func (g *basicGasMeter) UpdateGasValue(newValue Gas)  {
+	g.consumed = newValue
 }
 
 func (g *basicGasMeter) GasConsumed() Gas {
@@ -109,6 +114,10 @@ func NewInfiniteGasMeter() GasMeter {
 	}
 }
 
+func (g *infiniteGasMeter) UpdateGasValue(newValue Gas)  {
+	g.consumed = newValue
+}
+
 func (g *infiniteGasMeter) GasConsumed() Gas {
 	return g.consumed
 }
@@ -126,7 +135,7 @@ func (g *infiniteGasMeter) ConsumeGas(amount Gas, descriptor string) {
 	// TODO: Should we set the consumed field after overflow checking?
 	g.consumed, overflow = addUint64Overflow(g.consumed, amount)
 	if overflow {
-		panic(ErrorGasOverflow{descriptor})
+		g.consumed = 0
 	}
 }
 
